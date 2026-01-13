@@ -96,6 +96,31 @@ const ProfessionType = {
     灵魂乐手: 13,
 };
 
+// 技能ID到职业的映射
+const SKILL_TO_ROLE_MAP = {
+    1241: "射线",
+    55302: "协奏", 
+    20301: "愈合",
+    1518: "惩戒",
+    2306: "狂音",
+    120902: "冰矛",
+    1714: "居合", 
+    44701: "月刃",
+    220112: "鹰弓",
+    2203622: "鹰弓",
+    1700827: "狼弓",
+    1419: "空枪",
+    1418: "重装",
+    2405: "防盾",
+    2406: "光盾", 
+    199902: "岩盾",
+};
+
+// 根据技能ID获取职业名称
+const getRoleFromSkill = (skillId) => {
+    return SKILL_TO_ROLE_MAP[skillId] || null;
+};
+
 const getProfessionNameFromId = (professionId) => {
     switch (professionId) {
         case ProfessionType.雷影剑士:
@@ -121,7 +146,7 @@ const getProfessionNameFromId = (professionId) => {
         case ProfessionType.灵魂乐手:
             return "灵魂乐手";
         default:
-            return "";
+            return `未知职业(${professionId})`;  // 返回更有意义的信息
     }
 };
 
@@ -190,6 +215,13 @@ class PacketProcessor {
                     if (isAttackerPlayer) {
                         //只记录玩家造成的治疗
                         this.userDataManager.addHealing(attackerUuid.toNumber(), damage.toNumber(), isCrit, isLucky);
+                        
+                        // 尝试根据技能ID推断职业
+                        const roleName = getRoleFromSkill(skillId);
+                        if (roleName) {
+                            this.userDataManager.setProfession(attackerUuid.toNumber(), roleName);
+                            this.logger.debug(`Inferred profession ${roleName} from healing skill ${skillId} for player ${attackerUuid}`);
+                        }
                     }
                 } else {
                     //玩家受到伤害
@@ -204,6 +236,13 @@ class PacketProcessor {
                     if (isAttackerPlayer) {
                         //只记录玩家造成的伤害
                         this.userDataManager.addDamage(attackerUuid.toNumber(), skillId, damage.toNumber(), isCrit, isLucky, hpLessenValue.toNumber());
+                        
+                        // 尝试根据技能ID推断职业
+                        const roleName = getRoleFromSkill(skillId);
+                        if (roleName) {
+                            this.userDataManager.setProfession(attackerUuid.toNumber(), roleName);
+                            this.logger.debug(`Inferred profession ${roleName} from skill ${skillId} for player ${attackerUuid}`);
+                        }
                     }
                 }
             }
@@ -272,20 +311,45 @@ class PacketProcessor {
         const syncNearEntities = pb.SyncNearEntities.decode(payloadBuffer);
         // this.logger.debug(JSON.stringify(syncNearEntities, null, 2));
 
+        this.logger.debug(`SyncNearEntities: Appear count: ${syncNearEntities.Appear ? syncNearEntities.Appear.length : 0}`);
+        
         if (!syncNearEntities.Appear) return;
         for (const entity of syncNearEntities.Appear) {
-            if (entity.EntType !== pb.EEntityType.EntChar) continue;
+            this.logger.debug(`Entity type: ${entity.EntType}, UUID: ${entity.Uuid}`);
+            
+            if (entity.EntType !== pb.EEntityType.EntChar) {
+                this.logger.debug(`Skipping non-character entity: ${entity.EntType} (EntChar = ${pb.EEntityType.EntChar})`);
+                continue;
+            }
 
             let playerUuid = entity.Uuid;
-            if (!playerUuid) continue;
+            if (!playerUuid) {
+                this.logger.debug(`No UUID found for entity`);
+                continue;
+            }
             playerUuid = playerUuid.shiftRight(16);
 
             const attrCollection = entity.Attrs;
-            if (!attrCollection) continue;
+            if (!attrCollection) {
+                this.logger.debug(`No attributes found for player UUID ${playerUuid}`);
+                continue;
+            }
 
-            if (!attrCollection.Attrs) continue;
+            if (!attrCollection.Attrs) {
+                this.logger.debug(`No Attrs array found for player UUID ${playerUuid}`);
+                continue;
+            }
+            
+            this.logger.debug(`Processing attributes for player UUID ${playerUuid}, found ${attrCollection.Attrs.length} attributes`);
+            
             for (const attr of attrCollection.Attrs) {
-                if (!attr.Id || !attr.RawData) continue;
+                if (!attr.Id || !attr.RawData) {
+                    this.logger.debug(`Invalid attribute: Id=${attr.Id}, RawData length=${attr.RawData ? attr.RawData.length : 0}`);
+                    continue;
+                }
+                
+                this.logger.debug(`Processing attribute ID: 0x${attr.Id.toString(16)} (${attr.Id}) for UUID ${playerUuid}`);
+                
                 const reader = pbjs.Reader.create(attr.RawData);
 
                 switch (attr.Id) {
@@ -298,7 +362,7 @@ class PacketProcessor {
                         const professionId = reader.int32();
                         const professionName = getProfessionNameFromId(professionId);
                         this.userDataManager.setProfession(playerUuid.toNumber(), professionName);
-                        this.logger.debug(`Found profession ${professionName} for uuid ${playerUuid}`);
+                        this.logger.info(`Found profession ${professionName} (ID: ${professionId}) for uuid ${playerUuid}`);
                         break;
                     case AttrType.AttrFightPoint:
                         const playerFightPoint = reader.int32();
@@ -306,7 +370,7 @@ class PacketProcessor {
                         this.logger.debug(`Found player fight point ${playerFightPoint} for uuid ${playerUuid}`);
                         break;
                     default:
-                        // this.logger.debug(`Found unknown attrId ${attr.Id}`);
+                        this.logger.debug(`Found unknown attrId 0x${attr.Id.toString(16)} for uuid ${playerUuid}`);
                         break;
                 }
             }
@@ -328,8 +392,11 @@ class PacketProcessor {
             msgPayload = this._decompressPayload(msgPayload);
         }
 
+        this.logger.debug(`Processing NotifyMsg with methodId ${methodId} (0x${methodId.toString(16)})`);
+        
         switch (methodId) {
             case NotifyMethod.SyncNearEntities:
+                this.logger.info(`Processing SyncNearEntities (methodId: ${methodId})`);
                 this._processSyncNearEntities(msgPayload);
                 break;
             case NotifyMethod.SyncToMeDeltaInfo:
@@ -339,7 +406,7 @@ class PacketProcessor {
                 this._processSyncNearDeltaInfo(msgPayload);
                 break;
             default:
-                this.logger.debug(`Skipping NotifyMsg with methodId ${methodId}`);
+                this.logger.debug(`Skipping NotifyMsg with methodId ${methodId} (0x${methodId.toString(16)})`);
                 break;
         }
         return;

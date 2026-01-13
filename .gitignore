@@ -1,2 +1,9 @@
 node_modules/
 bak/
+__pycache__/
+*.pyc
+build/
+dist/
+temp_logs/
+*.exe
+personal_uid.txt

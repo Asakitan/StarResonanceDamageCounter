@@ -1,0 +1,19 @@
+# 星痕共鸣伤害统计器 - 完整Python依赖清单
+
+# 核心依赖
+psutil>=5.8.0
+requests>=2.28.0
+Pillow>=9.5.0
+
+# 网络相关
+urllib3>=1.26.0
+certifi>=2022.0.0
+charset-normalizer>=2.0.0
+
+# 可选功能依赖
+keyboard>=0.13.0       # 全局热键支持
+pyttsx3>=2.90         # TTS语音支持
+colorlog>=6.0.0       # 日志美化
+
+# 开发和打包依赖
+pyinstaller>=5.0.0    # 打包工具

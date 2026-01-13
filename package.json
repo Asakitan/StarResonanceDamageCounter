@@ -5,6 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "rebuild": "pnpm rebuild cap",
+    "build": "node build-server.js",
+    "build:simple": "npx caxa --input . --output ./dist/star-resonance-server.exe -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/server.js\"",
+    "build:minimal": "node build-minimal.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -21,6 +25,6 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
-    "protobufjs-cli": "^1.1.3"
+    "caxa": "^3.0.1"
   }
 }

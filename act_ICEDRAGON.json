@@ -1,0 +1,270 @@
+{
+  "name": "咲制-冰龙（20人困难）",
+  "description": "星痕共鸣：冰龙（20人困难）战斗配置。详细时间轴：开局10-15s点名放冰片→15-25s治疗开炮台控火龙→25s三连攻击；后续每90s天气变更循环；二阶段每60s双冰片爆炸需集合火桶处理。8分钟暴走。",
+  "version": "2.0-ice",
+  "total_duration": 480,
+  "hotkeys": {
+    "advance_phase": "Prior",
+    "reset_rage_time": "Next",
+    "phase_1": "F1",
+    "phase_2": "F2",
+    "phase_3": "F3"
+  },
+  "skip_mechanism": {
+    "enabled": false,
+    "skip_pattern": "2:1",
+    "description": "每2次触发跳过1次"
+  },
+  "jason_phases": {
+    "current_phase": 1,
+    "auto_advance": true,
+    "auto_advance_by_time": false,
+    "auto_advance_by_damage": true,
+    "time_based_advance": {
+      "enabled": false,
+      "phase_1_duration": 240,
+      "phase_2_duration": 180,
+      "phase_3_duration": 60,
+      "phase_3_auto_advance_before_rage": {
+        "enabled": true,
+        "seconds_before_rage": 60,
+        "description": "BOSS即将暴走"
+      }
+    },
+    "damage_based_advance": {
+      "enabled": true,
+      "phase_1_damage_threshold": 800000000,
+      "phase_2_damage_threshold": 1600000000,
+      "phase_3_damage_threshold": 1600000001,
+      "cumulative_damage": true
+    },
+    "phase_definitions": [
+      {
+        "id": 1,
+      "name": "冰龙\n一阶段",
+      "description": "开局10-15s点名\n15-25s炮台控火龙\n25s三连\n每90s循环天气变更",
+        "color": "#00bfff",
+        "duration": 240,
+        "mechanisms": [
+          "天气切换（90s循环）",
+          "点名C投冰片（开局10-15s，天气后+15s）",
+          "治疗开炮台控火龙（15-25s窗口，防火龙暴走）",
+          "三连横扫攻击（开局25s，天气后+25s）",
+          "火龙暴走机制（需炮台控制）"
+        ],
+        "warnings": [
+          {
+            "message": "即将点名放冰片！",
+            "time": 8,
+            "color": "cyan",
+            "sound": true
+          },
+          {
+            "message": "开炮台窗口开始！",
+            "time": 15,
+            "color": "blue",
+            "sound": true,
+            "interval": 15
+          },
+          {
+            "message": "即将三连攻击或投掷冰片！",
+            "time": 23,
+            "color": "orange",
+            "sound": true,
+            "interval": 25
+          },
+          {
+            "message": "天气即将变更！",
+            "time": 88,
+            "color": "yellow",
+            "sound": true,
+            "interval": 90
+          }
+        ]
+      },
+      {
+        "id": 2,
+      "name": "冰龙\n二阶段",
+      "description": "每60s双冰片爆炸\n必须集合放火桶处理",
+        "color": "#ffff66",
+        "duration": 180,
+        "mechanisms": [
+          "双冰片爆炸（每60s）",
+          "集合放置火桶处理",
+          "继续天气机制（如有）",
+          "继续炮台控火龙（如有）"
+        ],
+        "warnings": [
+          {
+            "message": "进入二阶段！准备处理冰片爆炸",
+            "time": 5,
+            "color": "yellow",
+            "sound": true
+          },
+          {
+            "message": "双冰片即将爆炸！集合火桶！",
+            "time": 55,
+            "color": "red",
+            "sound": true,
+            "interval": 60
+          }
+        ]
+      },
+      {
+        "id": 3,
+      "name": "暴走预警\n最后一分钟",
+      "description": "8分钟暴走！最后60秒全力输出\n优先处理剩余机制\n避免拖入暴走",
+        "color": "#ff3333",
+        "duration": 60,
+        "mechanisms": [
+          "狂暴读条",
+          "高额范围伤害",
+          "失败判定"
+        ],
+        "warnings": [
+          {
+            "message": "暴走前60秒",
+            "time": 2,
+            "color": "orange",
+            "sound": true
+          },
+          {
+            "message": "暴走前30秒",
+            "time": 28,
+            "color": "orange",
+            "sound": true
+          },
+          {
+            "message": "即将暴走！",
+            "time": 50,
+            "color": "red",
+            "sound": true,
+            "interval": 5
+          }
+        ]
+      },
+            {
+        "id": 4,
+      "name": "恭喜通关！",
+      "description": "恭喜团队成功通关冰龙副本！",
+        "color": "#ff3333",
+        "duration": 60,
+        "mechanisms": [
+          "通过！"
+        ],
+        "warnings": [
+          {
+            "message": "恭喜通关！",
+            "time": 5,
+            "color": "green",
+            "sound": true
+          }
+        ]
+      }
+    ]
+  },
+  "damage_thresholds": [
+    {
+      "id": "high_burst",
+      "damage_threshold": 1500000,
+      "trigger_condition": "increase",
+      "message": "高爆发！保持输出节奏",
+      "color": "green",
+      "sound": false
+    },
+    {
+      "id": "damage_milestone_5000k",
+      "damage_threshold": 50000000,
+      "trigger_condition": "total",
+      "message": "团队伤害突破50M！",
+      "color": "blue",
+      "sound": true
+    },
+    {
+      "id": "damage_milestone_100k",
+      "damage_threshold": 100000000,
+      "trigger_condition": "total",
+      "message": "团队伤害突破100M！",
+      "color": "purple",
+      "sound": true
+    }
+  ],
+  "alerts": [
+    {
+      "type": "timed",
+      "message": "冰龙战斗开始！",
+      "trigger_time": 478,
+      "sound": true,
+      "color": "green"
+    },
+    {
+      "type": "timed",
+      "message": "进入暴走预警窗口（还剩60秒）",
+      "trigger_time": 60,
+      "sound": true,
+      "color": "orange"
+    }
+  ],
+  "phases": [
+    {
+      "name": "冰龙\n一阶段",
+      "start_time": 0,
+      "end_time": 240,
+      "description": "开局10-15s点名\n15-25s炮台控火龙\n25s三连\n每90s循环天气变更",
+      "format": {
+        "font_size": 14,
+        "font_style": "bold",
+        "color": "neon_cyan"
+      }
+    },
+    {
+      "name": "冰龙\n二阶段",
+      "start_time": 240,
+      "end_time": 420,
+      "description": "每60s双冰片爆炸\n必须集合放火桶处理",
+      "format": {
+        "font_size": 16,
+        "font_style": "bold",
+        "color": "neon_yellow"
+      }
+    },
+    {
+      "name": "暴走预警\n压狂暴",
+      "start_time": 420,
+      "end_time": 480,
+      "description": "8分钟暴走！最后60秒全力输出\n优先处理剩余机制避免拖入暴走",
+      "format": {
+        "font_size": 18,
+        "font_style": "bold",
+        "color": "neon_red"
+      }
+    },
+        {
+      "name": "恭喜通关！",
+      "start_time": 480,
+      "end_time": 480,
+      "description": "恭喜团队成功通关冰龙副本！",
+      "format": {
+        "font_size": 18,
+        "font_style": "bold",
+        "color": "neon_red"
+      }
+    }
+  ],
+  "raid_templates": {
+    "ice_dragon_20h": {
+      "name": "冰龙（20人困难）",
+      "description": "虚空浮岛·神龙枷所——冰龙副本。团队20人，8分钟暴走。P1开局10-15s点名+15-25s炮台控火龙+25s三连，之后每90s天气循环；P2每60s双冰片需集合放火桶处理。",
+      "recommended_duration": 480,
+      "difficulty": "困难",
+      "team_size": "20人"
+    }
+  },
+  "ui_settings": {
+    "theme": "cyberpunk",
+    "timer_position": "center",
+    "damage_display_format": "comma_separated",
+    "phase_indicator_style": "colored_text",
+    "notification_duration": 3000
+  }
+}

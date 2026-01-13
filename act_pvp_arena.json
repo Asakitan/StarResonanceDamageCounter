@@ -1,0 +1,81 @@
+{
+  "name": "PVP竞技配置",
+  "description": "PVP战斗专用配置，快节奏提醒",
+  "total_duration": 180,
+  "skip_mechanism": {
+    "enabled": true,
+    "skip_pattern": "3:1",
+    "description": "每3次触发跳过1次"
+  },
+  "alerts": [
+    {
+      "type": "periodic",
+      "message": "检查敌方位置",
+      "interval": 10,
+      "sound": false,
+      "color": "cyan",
+      "skip_mechanism": {
+        "enabled": true,
+        "skip_pattern": "2:1"
+      }
+    },
+    {
+      "type": "periodic",
+      "message": "技能冷却检查", 
+      "interval": 20,
+      "sound": false,
+      "color": "yellow"
+    },
+    {
+      "type": "timed",
+      "message": "战斗即将结束！",
+      "trigger_time": 30,
+      "sound": true,
+      "color": "red"
+    },
+    {
+      "type": "countdown",
+      "message": "最后冲刺",
+      "start_time": 150,
+      "interval": 5,
+      "sound": true,
+      "color": "red",
+      "skip_mechanism": {
+        "enabled": true,
+        "skip_pattern": "2:1"
+      }
+    }
+  ],
+  "phases": [
+    {
+      "name": "开局阶段",
+      "start_time": 0,
+      "end_time": 60,
+      "description": "占据有利位置\n观察敌方动向",
+      "format": {
+        "font_size": 10,
+        "color": "green"
+      }
+    },
+    {
+      "name": "中期阶段",
+      "start_time": 60, 
+      "end_time": 150,
+      "description": "主要战斗阶段\n技能轮换\n控制节奏",
+      "format": {
+        "font_size": 12,
+        "color": "yellow"
+      }
+    },
+    {
+      "name": "收尾阶段",
+      "start_time": 150,
+      "end_time": 180,
+      "description": "最后决胜时刻\n全力爆发",
+      "format": {
+        "font_size": 14,
+        "color": "red"
+      }
+    }
+  ]
+}

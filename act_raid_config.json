@@ -1,0 +1,294 @@
+{
+  "name": "ACT副本配置",
+  "description": "统一的ACT副本战斗配置，支持阶段机制、提醒系统和快捷键控制",
+  "version": "2.0",
+  "total_duration": 600,
+  
+  "hotkeys": {
+    "advance_phase": "Prior",
+    "reset_rage_time": "Next",
+    "phase_1": "F1",
+    "phase_2": "F2", 
+    "phase_3": "F3"
+  },
+  
+  "skip_mechanism": {
+    "enabled": false,
+    "skip_pattern": "2:1",
+    "description": "每2次触发跳过1次"
+  },
+  
+  "jason_phases": {
+    "current_phase": 1,
+    "auto_advance": false,
+    "auto_advance_by_time": false,
+    "auto_advance_by_damage": false,
+    "time_based_advance": {
+      "enabled": false,
+      "phase_1_duration": 120,
+      "phase_2_duration": 180,
+      "phase_3_duration": 300,
+      "phase_3_auto_advance_before_rage": {
+        "enabled": true,
+        "seconds_before_rage": 60,
+        "description": "在暴走前60秒自动推进"
+      }
+    },
+    "damage_based_advance": {
+      "enabled": false,
+      "phase_1_damage_threshold": 30000,
+      "phase_2_damage_threshold": 80000,
+      "cumulative_damage": true
+    },
+    "phase_definitions": [
+      {
+        "id": 1,
+        "name": "一阶段机制",
+        "description": "JASON基础形态\n保持距离\n注意激光",
+        "color": "#00ff00",
+        "duration": 120,
+        "mechanisms": [
+          "环形激光扫射",
+          "能量球投掷",
+          "短距离冲锋"
+        ],
+        "warnings": [
+          {
+            "message": "注意环形激光！",
+            "time": 20,
+            "color": "yellow",
+            "sound": true,
+            "interval": 30
+          },
+          {
+            "message": "准备躲避能量球",
+            "time": 60,
+            "color": "blue",
+            "sound": true,
+            "interval": 20
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "二阶段机制",
+        "description": "JASON强化形态\n频繁技能\n团队配合",
+        "color": "#ffff00", 
+        "duration": 180,
+        "mechanisms": [
+          "连续激光轰炸",
+          "能量护盾",
+          "范围爆炸",
+          "召唤小怪"
+        ],
+        "warnings": [
+          {
+            "message": "激光轰炸开始！",
+            "time": 30,
+            "color": "orange",
+            "sound": true,
+            "interval": 25
+          },
+          {
+            "message": "护盾阶段，集火破盾",
+            "time": 90,
+            "color": "purple",
+            "sound": true,
+            "interval": 15
+          },
+          {
+            "message": "注意范围爆炸！",
+            "time": 150,
+            "color": "red",
+            "sound": true,
+            "interval": 20
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "三阶段机制",
+        "description": "JASON暴走形态\n极限挑战\n生死时刻",
+        "color": "#ff0000",
+        "duration": 300,
+        "mechanisms": [
+          "全屏激光网格",
+          "连续传送攻击", 
+          "死亡射线",
+          "最终自爆倒计时"
+        ],
+        "warnings": [
+          {
+            "message": "激光网格启动！",
+            "time": 60,
+            "color": "red",
+            "sound": true,
+            "interval": 30
+          },
+          {
+            "message": "传送攻击开始！",
+            "time": 120,
+            "color": "red",
+            "sound": true,
+            "interval": 20
+          },
+          {
+            "message": "死亡射线充能中！",
+            "time": 180,
+            "color": "red",
+            "sound": true,
+            "interval": 15
+          },
+          {
+            "message": "自爆倒计时！最后机会！",
+            "time": 240,
+            "color": "red",
+            "sound": true,
+            "interval": 10
+          }
+        ]
+      }
+    ]
+  },
+  
+  "damage_thresholds": [
+    {
+      "id": "phase_1_hp",
+      "damage_threshold": 30000,
+      "trigger_condition": "total",
+      "message": "JASON血量降低！准备二阶段",
+      "color": "yellow",
+      "sound": true,
+      "auto_advance_phase": true
+    },
+    {
+      "id": "phase_2_hp", 
+      "damage_threshold": 80000,
+      "trigger_condition": "total",
+      "message": "JASON进入暴走！三阶段开始",
+      "color": "red",
+      "sound": true,
+      "auto_advance_phase": true
+    },
+    {
+      "id": "high_burst",
+      "damage_threshold": 1000000,
+      "trigger_condition": "increase",
+      "message": "高伤害！继续保持",
+      "color": "green",
+      "sound": false
+    },
+    {
+      "id": "damage_milestone_5000k",
+      "damage_threshold": 5000000,
+      "trigger_condition": "total",
+      "message": "团队伤害突破500万！",
+      "color": "blue",
+      "sound": true
+    },
+    {
+      "id": "damage_milestone_10000k",
+      "damage_threshold": 10000000,
+      "trigger_condition": "total",
+      "message": "团队伤害突破1000万！",
+      "color": "purple",
+      "sound": true
+    }
+  ],
+  
+  "alerts": [
+    {
+      "type": "periodic",
+      "message": "检查阶段机制状态",
+      "interval": 30,
+      "sound": false,
+      "color": "cyan"
+    },
+    {
+      "type": "periodic",
+      "message": "注意死刑点名",
+      "interval": 45,
+      "sound": true,
+      "color": "red",
+      "skip_mechanism": {
+        "enabled": true,
+        "skip_pattern": "3:2"
+      }
+    },
+    {
+      "type": "periodic",
+      "message": "检查BUFF状态",
+      "interval": 60,
+      "sound": false,
+      "color": "yellow"
+    },
+    {
+      "type": "timed",
+      "message": "战斗开始！",
+      "trigger_time": 5,
+      "sound": true,
+      "color": "green"
+    }
+  ],
+  
+  "phases": [
+    {
+      "name": "JASON\n一阶段",
+      "start_time": 0,
+      "end_time": 120,
+      "description": "基础机制阶段\n保持距离\n熟悉节奏",
+      "format": {
+        "font_size": 14,
+        "font_style": "bold",
+        "color": "neon_green"
+      }
+    },
+    {
+      "name": "JASON\n二阶段",
+      "start_time": 120,
+      "end_time": 300,
+      "description": "强化机制阶段\n技能频繁\n团队配合",
+      "format": {
+        "font_size": 16,
+        "font_style": "bold", 
+        "color": "neon_yellow"
+      }
+    },
+    {
+      "name": "JASON\n三阶段",
+      "start_time": 480,
+      "end_time": 600,
+      "description": "暴走机制阶段\n极限挑战\n全力以赴",
+      "format": {
+        "font_size": 18,
+        "font_style": "bold",
+        "color": "neon_red"
+      }
+    }
+  ],
+  
+  "raid_templates": {
+    "jason_library": {
+      "name": "JASON库副本",
+      "description": "经典JASON库三阶段机制",
+      "recommended_duration": 600,
+      "difficulty": "高等",
+      "team_size": "8人"
+    },
+    "generic_raid": {
+      "name": "通用团本",
+      "description": "适用于大多数团本的通用配置",
+      "recommended_duration": 300,
+      "difficulty": "中等",
+      "team_size": "4-8人"
+    }
+  },
+  
+  "ui_settings": {
+    "theme": "cyberpunk",
+    "timer_position": "center",
+    "damage_display_format": "comma_separated",
+    "phase_indicator_style": "colored_text",
+    "notification_duration": 3000
+  }
+}

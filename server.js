@@ -1,4 +1,12 @@
-const cap = require('cap');
+// 使用动态加载器处理 pkg 打包时的原生模块问题
+let cap;
+try {
+    cap = require('cap');
+} catch (err) {
+    console.warn('Warning: Using fallback cap loader for pkg environment');
+    cap = require('./pkg-cap-loader');
+}
+
 const cors = require('cors');
 const readline = require('readline');
 const winston = require("winston");
@@ -20,6 +28,13 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 const devices = cap.deviceList();
+
+// 处理命令行参数
+if (process.argv.includes('--list-devices')) {
+    // 输出设备列表并退出
+    console.log(JSON.stringify(devices, null, 0));
+    process.exit(0);
+}
 
 function ask(question) {
     return new Promise(resolve => {
@@ -184,13 +199,13 @@ class StatisticData {
 class UserData {
     constructor(uid) {
         this.uid = uid;
-        this.name = '';
+        this.name = '';  // 添加玩家名称
+        this.fightPoint = 0;  // 添加战力
         this.damageStats = new StatisticData();
         this.healingStats = new StatisticData();
         this.takenDamage = 0; // 承伤
-        this.profession = '未知';
+        this.profession = 'N/A';
         this.skillUsage = new Map(); // 技能使用情况
-        this.fightPoint = 0; // 总评分
     }
 
     /** 添加伤害记录
@@ -230,7 +245,24 @@ class UserData {
      * @param {string} profession - 职业名称
      * */
     setProfession(profession) {
-        this.profession = profession;
+        // 只有当职业名称不为空时才设置
+        if (profession && profession.trim() !== '') {
+            this.profession = profession;
+        }
+    }
+
+    /** 设置玩家名称
+     * @param {string} name - 玩家名称
+     * */
+    setName(name) {
+        this.name = name;
+    }
+
+    /** 设置战力
+     * @param {number} fightPoint - 战力值
+     * */
+    setFightPoint(fightPoint) {
+        this.fightPoint = fightPoint;
     }
 
     /** 更新实时DPS和HPS 计算过去1秒内的总伤害和治疗 */
@@ -262,6 +294,9 @@ class UserData {
     /** 获取用户数据摘要 */
     getSummary() {
         return {
+            uid: this.uid,
+            name: this.name,
+            fightPoint: this.fightPoint,
             realtime_dps: this.damageStats.realtimeStats.value,
             realtime_dps_max: this.damageStats.realtimeStats.max,
             total_dps: this.getTotalDps(),
@@ -273,23 +308,7 @@ class UserData {
             total_healing: { ...this.healingStats.stats },
             taken_damage: this.takenDamage,
             profession: this.profession,
-            name: this.name,
-            fightPoint: this.fightPoint,
         };
-    }
-
-    /** 设置姓名
-     * @param {string} name - 姓名
-     * */
-    setName(name) {
-        this.name = name;
-    }
-
-    /** 设置用户总评分
-     * @param {number} fightPoint - 总评分
-     */
-    setFightPoint(fightPoint) {
-        this.fightPoint = fightPoint;
     }
 
     /** 重置数据 预留 */
@@ -297,9 +316,10 @@ class UserData {
         this.damageStats.reset();
         this.healingStats.reset();
         this.takenDamage = 0;
-        this.profession = '未知';
-        this.skillUsage.clear();
+        this.name = '';
         this.fightPoint = 0;
+        this.profession = 'N/A';
+        this.skillUsage.clear();
     }
 }
 
@@ -362,19 +382,19 @@ class UserDataManager {
         user.setProfession(profession);
     }
 
-    /** 设置用户姓名
+    /** 设置用户名称
      * @param {number} uid - 用户ID
-     * @param {string} name - 姓名
+     * @param {string} name - 玩家名称
      * */
     setName(uid, name) {
         const user = this.getUser(uid);
         user.setName(name);
     }
 
-    /** 设置用户总评分
+    /** 设置用户战力
      * @param {number} uid - 用户ID
-     * @param {number} fightPoint - 总评分
-     */
+     * @param {number} fightPoint - 战力值
+     * */
     setFightPoint(uid, fightPoint) {
         const user = this.getUser(uid);
         user.setFightPoint(fightPoint);
@@ -414,7 +434,7 @@ let isPaused = false;
 
 async function main() {
     print('Welcome to use Damage Counter for Star Resonance!');
-    print('Version: V2.2.2');
+    print('Version: V2.2.1');
     print('GitHub: https://github.com/dmlgzs/StarResonanceDamageCounter');
     for (let i = 0; i < devices.length; i++) {
         print(i + '.\t' + devices[i].description);
@@ -515,6 +535,20 @@ async function main() {
         res.json({
             code: 0,
             paused: isPaused
+        });
+    });
+
+    // 获取UID映射API
+    app.get('/api/uid-mappings', (req, res) => {
+        const mappings = {};
+        for (const [uid, user] of userDataManager.users.entries()) {
+            if (user.name && user.name.trim() !== '') {
+                mappings[uid] = user.name;
+            }
+        }
+        res.json({
+            code: 0,
+            mappings: mappings
         });
     });
 
